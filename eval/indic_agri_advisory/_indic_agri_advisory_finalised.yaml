@@ -1,0 +1,21 @@
+# Group config so `--tasks indic_agri_advisory_finalised` runs all 11
+# languages in one lm_eval invocation.
+#
+# NO aggregate_metric_list: this group's only metric is `bypass`, which by
+# definition has nothing to aggregate (Stage 1 does not score). Pooled
+# cross-language numbers come from Stage 2 (indic_agri_judge).
+group: indic_agri_advisory_finalised
+task:
+  - indic_agri_advisory_finalised_en
+  - indic_agri_advisory_finalised_bn
+  - indic_agri_advisory_finalised_gu
+  - indic_agri_advisory_finalised_hi
+  - indic_agri_advisory_finalised_kn
+  - indic_agri_advisory_finalised_ml
+  - indic_agri_advisory_finalised_mr
+  - indic_agri_advisory_finalised_or
+  - indic_agri_advisory_finalised_pa
+  - indic_agri_advisory_finalised_ta
+  - indic_agri_advisory_finalised_te
+metadata:
+  version: 1.0

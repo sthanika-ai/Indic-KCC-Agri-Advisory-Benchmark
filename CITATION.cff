@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Indic-KCC-Agri-Advisory-Benchmark"
+type: software
+authors:
+  - name: "Sthānika AI"
+url: "https://sthanika.ai/research/indic-agri-advisory-2026"
+repository-code: "https://github.com/sthanika-ai/Indic-KCC-Agri-Advisory-Benchmark"
+license: MIT
+date-released: 2026-10-01

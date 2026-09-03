@@ -1,0 +1,7 @@
+include: _default_template_yaml
+task: indic_agri_advisory_finalised_ml
+task_alias: indic_agri_advisory_finalised_ml
+tag: indic-agri-advisory-finalised
+dataset_kwargs:
+  data_files:
+    test: "data/finalised_ml_test.jsonl"

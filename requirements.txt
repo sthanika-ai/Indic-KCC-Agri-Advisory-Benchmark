@@ -1,0 +1,18 @@
+# Dependencies for running both stages. Lower bounds, NOT a frozen lockfile:
+# the harness is lm-evaluation-harness and the rest follow from it. Once you
+# have a working environment, record it with `pip freeze > requirements.lock`
+# and pin that for exact reproduction of a published run.
+#
+#   python -m venv .venv && source .venv/bin/activate
+#   pip install -r requirements.txt
+lm_eval>=0.4.9
+datasets>=4.0
+huggingface_hub>=0.30
+# Newer judge/candidate architectures (e.g. Qwen3.5) need transformers 5.x.
+transformers>=5.0
+torch
+accelerate
+
+# Fast serving for real runs (--model vllm). Optional on CPU/small tests,
+# where `--model hf` works but is much slower:
+# vllm

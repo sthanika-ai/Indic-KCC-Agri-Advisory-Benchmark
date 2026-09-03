@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+data/
+results/
+eval/indic_agri_judge/judge_input/
