@@ -1,0 +1,53 @@
+# STAGE 1 of the Indic-KCC-Agri-Advisory-Benchmark's lm-evaluation-harness
+# pipeline: the candidate model generates an advisory answer. No metric is
+# scored here -- `metric: bypass` (the harness's own documented "generate
+# now, score later" escape hatch, which requires --log_samples) defers ALL
+# scoring to STAGE 2 (indic_agri_judge/), where a DIFFERENT model scores
+# correctness / naturalness / groundedness / safety.
+#
+# PATHS ARE RELATIVE TO THIS PACKAGE'S ROOT (the directory this README.md
+# lives in), deliberately: HF datasets resolves data_files against the
+# process CWD, so an absolute path would hard-code one machine and break for
+# anyone who clones this repo. `cd` to this package's root before invoking
+# `lm_eval` by hand, or point `--include_path` at eval/indic_agri_advisory
+# from there.
+dataset_path: json
+output_type: generate_until
+test_split: test
+# NO fewshot_split, deliberately: every row here is benchmark data and is
+# scored, so there is no held-out pool of exemplars to draw from. This
+# benchmark is therefore reported 0-SHOT.
+#
+# Asked for --num_fewshot N on a task with no fewshot_split, lm-eval-harness
+# does NOT error -- it silently falls back to drawing exemplars from the TEST
+# split and merely warns ("using test_docs as fewshot_docs but this is not
+# recommended"), which would show the model rows it is also scored on. Refuse
+# any wrapper script's --num-fewshot > 0 against these tasks for that reason.
+doc_to_text: !function utils.doc_to_text
+doc_to_target: "{{answer}}"
+metric_list:
+  - metric: bypass
+    aggregation: bypass
+    higher_is_better: true
+generation_kwargs:
+  do_sample: false
+  temperature: 0.0
+  top_p: 1.0
+  max_gen_toks: 1024
+  # `until` MUST be set explicitly. lm-eval-harness injects
+  # until = [fewshot_delimiter] = ["\n\n"] whenever a generate_until task omits
+  # it (api/task.py:124-125), which for multi-paragraph advisory prose truncates
+  # the answer at the FIRST BLANK LINE -- measured on a real run, this cut
+  # answers mid-sentence right where a list would follow, and some rows were
+  # nothing but a greeting because the model opened with a salutation, emitted
+  # a blank line, and generation stopped there.
+  #
+  # EMPTY, and that is a deliberate correction, not an omission. A stop string
+  # drawn from the prompt (e.g. "Farmer's question:") is unsafe for any model
+  # that restates the prompt inside its own reasoning -- a reasoning model
+  # quoting the prompt back inside <think>/analysis channels will trip that
+  # stop before any answer exists. Empty means the backend falls back to the
+  # tokenizer's EOS alone.
+  until: []
+metadata:
+  version: 1.0

@@ -1,0 +1,70 @@
+# STAGE 2 of the Indic-KCC-Agri-Advisory-Benchmark's lm-evaluation-harness
+# pipeline: an LLM judge scores each already-generated candidate answer on 4
+# axes -- correctness, naturalness, groundedness, safety.
+#
+# The judge must be a DIFFERENT model from the one being scored. A model
+# grading its own output shares its own blind spots.
+#
+# Its dataset is NOT the benchmark corpus itself -- it is a JSONL file YOU
+# generate between Stage 1 and Stage 2: one row per (candidate answer,
+# reference answer) pair, with fields `crop`, `query_type`, `language`,
+# `script_form`, `question`, `reference_answer`, `candidate_answer`, and
+# `model_key` (see utils.py's doc_to_text for the exact fields it reads).
+# Build it from your own Stage 1 `--log_samples` output joined back against
+# this dataset's `data/finalised_<lang>_test.jsonl` (the `answer` column
+# there is the reference). Point `data_files.test` below at that file.
+#
+# download_mode: force_redownload is REQUIRED if you reuse the same path
+# across models/languages: without it HF datasets would serve a cached copy
+# of a previous model's answers and every subsequent model would be scored on
+# the first model's output.
+#
+# The path is relative to this package's root -- see indic_agri_advisory's
+# _default_template_yaml for why (portability), and cd there if you invoke
+# lm_eval by hand.
+task: indic_agri_judge
+dataset_path: json
+dataset_kwargs:
+  data_files:
+    test: "eval/indic_agri_judge/judge_input/_current.jsonl"  # <- YOU generate this file, see above
+  download_mode: force_redownload
+output_type: generate_until
+test_split: test
+doc_to_text: !function utils.doc_to_text
+doc_to_target: ""
+process_results: !function utils.process_results
+generation_kwargs:
+  do_sample: false
+  temperature: 0.0
+  top_p: 1.0
+  max_gen_toks: 400
+  # Empty, deliberately -- NOT omitted. Omitting it makes lm-eval-harness inject
+  # until = ["\n\n"] (api/task.py:124-125), which would cut the judge off at the
+  # first blank line: fatal for a judge that reasons briefly before emitting its
+  # JSON, or wraps it in a ```json fence. Empty means the vLLM backend falls back
+  # to stopping at EOS only (models/vllm_causallms.py:414-416), so the whole
+  # verdict is captured and utils.process_results can find the JSON in it.
+  until: []
+metric_list:
+  - metric: correctness
+    aggregation: mean
+    higher_is_better: true
+  - metric: naturalness
+    aggregation: mean
+    higher_is_better: true
+  - metric: groundedness
+    aggregation: mean
+    higher_is_better: true
+  - metric: safety
+    aggregation: mean
+    higher_is_better: true
+  # Fraction of judge replies that parsed as valid JSON in [1,5]. NOT a quality
+  # axis -- it is the guard on the four above. A parse failure floors all four
+  # axes at 1, so a low parse_ok means the four scores are understated by
+  # however much of the run the judge fumbled, and must be reported alongside
+  # them rather than quietly averaged in.
+  - metric: parse_ok
+    aggregation: mean
+    higher_is_better: true
+metadata:
+  version: 1.0
